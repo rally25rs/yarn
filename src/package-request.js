@@ -376,13 +376,17 @@ export default class PackageRequest {
 
     // filter the list down to just the packages requested.
     // prevents us from having to query the metadata for all packages.
+    const filters = [];
     if (filterByPatterns && filterByPatterns.length) {
-      const filterByNames = filterByPatterns.map(pattern => normalizePattern(pattern).name);
-      depReqPatterns = depReqPatterns.filter(
-        dep =>
-          filterByNames.indexOf(normalizePattern(dep.pattern).name) >= 0 ||
-          (flags && flags.pattern && micromatch.contains(normalizePattern(dep.pattern).name, flags.pattern)),
-      );
+      const filterByNames = (filterByPatterns || []).map(pattern => normalizePattern(pattern).name);
+      filters.push(dep => filterByNames.indexOf(normalizePattern(dep.pattern).name) >= 0);
+    }
+    if (flags && flags.pattern) {
+      // $FlowFixMe - Complains that `flags` could be undefined, despite `if` check above.
+      filters.push(dep => micromatch.contains(normalizePattern(dep.pattern).name, flags.pattern));
+    }
+    if (filters.length) {
+      depReqPatterns = depReqPatterns.filter(dep => filters.some(filter => filter(dep)));
     }
 
     const deps = await Promise.all(

@@ -147,6 +147,7 @@ test.concurrent('upgrades from fixed version to latest with workspaces', (): Pro
 
 test.concurrent('works with just a pattern', (): Promise<void> => {
   return runUpgrade([], {pattern: 'max'}, 'multiple-packages', async (config): ?Promise<void> => {
+    await expectInstalledDependency(config, 'left-pad', '^1.0.0', '1.0.0');
     await expectInstalledDependency(config, 'max-safe-integer', '^1.0.0', '1.0.1');
     await expectInstalledDependency(config, 'is-negative-zero', '^1.0.0', '1.0.0');
   });
